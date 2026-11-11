@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>课程助手 · B站课程实时总结</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">课</span>
+      <div class="brand-text">
+        <h1>课程助手</h1>
+        <p>B站课程实时总结 · 本地运行</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <span id="statusPill" class="pill pill-idle">连接中…</span>
+
+      <label class="switch" title="应用开关">
+        <input id="toggle" type="checkbox" checked>
+        <span class="slider"></span>
+      </label>
+
+      <div class="interval-box">
+        <label for="interval">间隔</label>
+        <input id="interval" type="number" min="3" max="300" step="1" value="15">
+        <span class="unit">秒</span>
+        <div class="presets" id="presets">
+          <button type="button" data-sec="5">5s</button>
+          <button type="button" data-sec="10">10s</button>
+          <button type="button" data-sec="15">15s</button>
+          <button type="button" data-sec="30">30s</button>
+          <button type="button" data-sec="60">60s</button>
+        </div>
+      </div>
+
+      <button id="scanBtn" class="btn primary">立即检测</button>
+      <button id="settingsBtn" class="btn ghost" title="设置">设置</button>
+      <button id="quitBtn" class="btn ghost danger" title="退出应用">退出</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel poll">
+      <div class="panel-head">
+        <h2>实时轮询</h2>
+        <span id="nextTick" class="muted"></span>
+      </div>
+
+      <div class="paused-hint" id="pausedHint" hidden>
+        ⏸ 轮询已暂停，不会检测新视频。点右上角的开关即可恢复。
+      </div>
+
+      <div class="window-card" id="currentWindow">
+        <div class="window-label">当前前台窗口</div>
+        <div class="window-title" id="windowTitle">等待第一次检测…</div>
+        <div class="window-meta">
+          <span id="windowProc">—</span>
+          <span class="dot">·</span>
+          <span id="windowTime">—</span>
+          <span class="dot">·</span>
+          <span id="windowVerdict" class="badge">—</span>
+        </div>
+      </div>
+
+      <div class="list-head">
+        <span>观察记录</span>
+        <span class="muted" id="obsCount"></span>
+      </div>
+      <ul id="observations" class="observations"></ul>
+
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="panel summary">
+      <div class="panel-head">
+        <h2>知识总结</h2>
+        <span class="muted" id="summaryMeta"></span>
+      </div>
+
+      <div id="summaryEmpty" class="empty">
+        <div class="empty-icon">🎓</div>
+        <h3>还没有检测到课程</h3>
+        <p>在浏览器前台打开一个 B 站课程视频，助手会自动抓取简介、弹幕和评论并总结知识点。</p>
+        <div class="manual">
+          <input id="manualTitle" type="text" placeholder="或手动输入视频标题试试…">
+          <button id="manualScanBtn" class="btn">检测</button>
+        </div>
+      </div>
+
+      <div id="summaryContent" hidden>
+        <div class="video-head">
+          <div>
+            <h3 id="videoTitle"></h3>
+            <div class="video-meta">
+              <span id="subjectChip" class="chip"></span>
+              <span id="engineChip" class="chip chip-soft"></span>
+              <a id="bvidLink" href="#" target="_blank" rel="noreferrer"></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-line" id="videoStats"></div>
+
+        <div class="block">
+          <h4>课程概览</h4>
+          <p id="overview" class="overview"></p>
+        </div>
+
+        <div class="block">
+          <h4>核心知识点</h4>
+          <div id="points" class="points"></div>
+        </div>
+
+        <div class="block">
+          <h4>弹幕与评论焦点</h4>
+          <div id="focus" class="focus"></div>
+        </div>
+
+        <div class="block">
+          <h4>关键词</h4>
+          <div id="keywordList" class="keywords"></div>
+        </div>
+
+        <div class="actions">
+          <button id="reprocessBtn" class="btn">重新总结</button>
+          <button id="openDocBtn" class="btn primary">打开 Word</button>
+          <button id="openFolderBtn" class="btn ghost">打开目录</button>
+          <span id="warningText" class="warn"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="panel history">
+    <div class="panel-head">
+      <h2>笔记历史</h2>
+      <div class="history-tools">
+        <select id="subjectFilter"><option value="">全部学科</option></select>
+        <button id="refreshBtn" class="btn ghost small">刷新</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>时间</th><th>学科</th><th>标题</th><th>来源</th><th>操作</th></tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div id="settingsModal" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>设置</h3>
+        <button id="closeSettings" class="icon-btn" title="关闭">×</button>
+      </div>
+
+      <div class="field">
+        <label for="cfgNotesDir">笔记输出目录</label>
+        <input id="cfgNotesDir" type="text">
+      </div>
+
+      <label class="check">
+        <input id="cfgAutoOpen" type="checkbox">
+        <span>启动时自动打开浏览器</span>
+      </label>
+
+      <div class="divider"></div>
+
+      <label class="check">
+        <input id="cfgLlmEnabled" type="checkbox">
+        <span>使用大模型总结（OpenAI 兼容接口）</span>
+      </label>
+      <p class="hint">不开启时使用本地规则摘要：从简介、弹幕、评论里提取要点，无需 API Key。</p>
+
+      <div class="field">
+        <label for="cfgLlmBase">Base URL</label>
+        <input id="cfgLlmBase" type="text" placeholder="https://api.deepseek.com">
+        <p class="hint">填 API 根地址（DeepSeek 官方：https://api.deepseek.com），不要填控制台网页。</p>
+      </div>
+      <div class="field two">
+        <div>
+          <label for="cfgLlmModel">模型</label>
+          <input id="cfgLlmModel" type="text" placeholder="deepseek-chat" list="modelOptions">
+          <datalist id="modelOptions">
+            <option value="deepseek-chat"></option>
+            <option value="deepseek-reasoner"></option>
+            <option value="deepseek-flash"></option>
+            <option value="deepseek-v4-pro"></option>
+          </datalist>
+          <p class="hint">服务商文档里的模型 id，例如 deepseek-chat。</p>
+        </div>
+        <div>
+          <label for="cfgLlmKey">API Key</label>
+          <input id="cfgLlmKey" type="password" placeholder="留空表示保持不变">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="fillDeepseekBtn" class="btn ghost" type="button">填入 DeepSeek 官方</button>
+        <button id="testLlmBtn" class="btn ghost">测试连接</button>
+        <button id="saveSettings" class="btn primary">保存</button>
+      </div>
+      <p id="settingsMsg" class="settings-msg"></p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
